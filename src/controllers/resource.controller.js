@@ -1,4 +1,6 @@
-import { Resource, resourceTypes } from "../models/resource.model";
+import { Resource, resourceTypes } from "../models/resource.model.js";
+import { Student } from "../models/user.model.js";
+import { createNotification } from "./notification.controller";
 
 export const createResource = async (req, res) => {
   try {
@@ -39,6 +41,24 @@ export const createResource = async (req, res) => {
         year: req.body.year,
         uploadedBy: req.user._id,
       });
+
+      // Notify all students in the course and semester about the PYQ upload
+      const students = await Student.find({
+        course,
+        semester,
+        subject,
+      });
+
+      for (const student of students) {
+        await createNotification({
+          recipient: student._id,
+          recipientModel: "Student",
+          title: "New PYQ Available",
+          message: `A new PYQ has been uploaded for ${title}`,
+          type: "PYQ",
+          relatedId: newResource._id,
+        });
+      }
     } else if (type === resourceTypes.NOTES) {
       newResource = new Resource({
         title,
@@ -49,6 +69,24 @@ export const createResource = async (req, res) => {
         course,
         uploadedBy: req.user._id,
       });
+
+      // Notify all students in the course and semester about the notes upload
+      const students = await Student.find({
+        course,
+        semester,
+        subject,
+      });
+
+      for (const student of students) {
+        await createNotification({
+          recipient: student._id,
+          recipientModel: "Student",
+          title: "New Notes Available",
+          message: `New notes have been uploaded for ${title}`,
+          type: "NOTES",
+          relatedId: newResource._id,
+        });
+      }
     } else {
       if (!req.body.dueDate) {
         return res.status(400).json({
@@ -67,6 +105,26 @@ export const createResource = async (req, res) => {
         dueDate: req.body.dueDate,
         uploadedBy: req.user._id,
       });
+
+      // Notify all students in the course and semester about the assignment upload
+      const students = await Student.find({
+        course,
+        semester,
+        subject,
+      });
+
+      for (const student of students) {
+        await createNotification({
+          recipient: student._id,
+          recipientModel: "Student",
+          title: "New Assignment",
+          message: `New assignment posted for ${
+            subject.subjectName
+          }: ${title}. Due date: ${new Date(dueDate).toLocaleDateString()}`,
+          type: "ASSIGNMENT",
+          relatedId: assignment._id,
+        });
+      }
     }
 
     await newResource.save();
@@ -136,6 +194,24 @@ export const updateResource = async (req, res) => {
       resource.course = course;
       resource.type = resourceTypes.PYQ;
       resource.year = req.body.year;
+
+      // Notify all students in the course and semester about the PYQ upload
+      const students = await Student.find({
+        course,
+        semester,
+        subject,
+      });
+
+      for (const student of students) {
+        await createNotification({
+          recipient: student._id,
+          recipientModel: "Student",
+          title: "New PYQ Available",
+          message: `A new PYQ has been uploaded for ${title}`,
+          type: "PYQ",
+          relatedId: resource._id,
+        });
+      }
     } else if (type === resourceTypes.NOTES) {
       resource.title = title;
       resource.fileUrl = fileUrl;
@@ -143,6 +219,24 @@ export const updateResource = async (req, res) => {
       resource.semester = semester;
       resource.course = course;
       resource.type = resourceTypes.NOTES;
+
+      // Notify all students in the course and semester about the notes upload
+      const students = await Student.find({
+        course,
+        semester,
+        subject,
+      });
+
+      for (const student of students) {
+        await createNotification({
+          recipient: student._id,
+          recipientModel: "Student",
+          title: "New Notes Available",
+          message: `New notes have been uploaded for ${title}`,
+          type: "NOTES",
+          relatedId: resource._id,
+        });
+      }
     } else {
       if (!req.body.dueDate) {
         return res.status(400).json({
@@ -158,6 +252,26 @@ export const updateResource = async (req, res) => {
       resource.course = course;
       resource.type = resourceTypes.ASSIGNMENT;
       resource.dueDate = req.body.dueDate;
+
+      // Notify all students in the course and semester about the assignment upload
+      const students = await Student.find({
+        course,
+        semester,
+        subject,
+      });
+
+      for (const student of students) {
+        await createNotification({
+          recipient: student._id,
+          recipientModel: "Student",
+          title: "New Assignment",
+          message: `New assignment posted for ${
+            subject.subjectName
+          }: ${title}. Due date: ${new Date(dueDate).toLocaleDateString()}`,
+          type: "ASSIGNMENT",
+          relatedId: resource._id,
+        });
+      }
     }
 
     await resource.save();
@@ -181,6 +295,25 @@ export const deleteResource = async (req, res) => {
     }
 
     await resource.remove();
+
+    // notify all students about resource deletion
+    const students = await Student.find({
+      course: resource.course,
+      semester: resource.semester,
+      subject: resource.subject,
+    });
+
+    for (const student of students) {
+      await createNotification({
+        recipient: student._id,
+        recipientModel: "Student",
+        title: "Resource Deleted",
+        message: `The resource ${resource.title} has been deleted`,
+        type: "NOTICE",
+        relatedId: resource._id,
+      });
+    }
+
     res.status(200).json({ success: true, message: "Resource deleted" });
   } catch (error) {
     return res.status(400).json({ success: false, message: error.message });

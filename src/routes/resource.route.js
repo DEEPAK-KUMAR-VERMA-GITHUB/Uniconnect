@@ -1,14 +1,14 @@
 import {
-    createResource,
-    deleteResource,
-    getResource,
-    getResources,
-    updateResource,
-} from "../controllers/resource.controller";
+  createResource,
+  deleteResource,
+  getResource,
+  getResources,
+  updateResource,
+} from "../controllers/resource.controller.js";
 import {
-    isAdmin,
-    isAuthenticatedUser,
-} from "./../middlewares/isAuthenticatedUser";
+  isAdmin,
+  isAuthenticatedUser,
+} from "./../middlewares/isAuthenticatedUser.js";
 
 const resourceSchema = {
   body: {

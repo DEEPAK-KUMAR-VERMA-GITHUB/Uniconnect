@@ -1,6 +1,8 @@
 import { Resource } from "../models/resource.model.js";
 import { Subject } from "../models/subject.model.js";
+import { Faculty } from "../models/user.model.js";
 import { AssignmentSubmission } from "./../models/assignmentSubmission.model";
+import { createNotification } from "./notification.controller.js";
 
 export const createSubject = async (req, res) => {
   try {
@@ -22,6 +24,22 @@ export const createSubject = async (req, res) => {
       subjectFaculty,
       subjectCourse,
     });
+
+    // notify faculty about the new subject
+    const faculty = await Faculty.findById(subjectFaculty);
+    faculty.subjects.push(subject._id);
+
+    await faculty.save();
+
+    await createNotification({
+      recipient: subjectFaculty,
+      recipientModel: "Faculty",
+      title: "New Subject Assigned",
+      message: `You have assigned with a new subject: ${subjectName}`,
+      type: "NOTICE",
+      relatedId: subject._id,
+    });
+
     await subject.save();
     return res.status(201).json({
       success: true,

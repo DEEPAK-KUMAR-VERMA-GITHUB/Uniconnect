@@ -1,20 +1,21 @@
-import { Notification } from '../models/notification.model.js';
-import { ErrorHandler } from '../utils/ErrorHandler.js';
-import { sendNotification } from '../websocket/handlers.js';
+import { Notification } from "../models/notification.model.js";
+import { UserRoles } from "../models/user.model.js";
+import { ErrorHandler } from "../utils/ErrorHandler.js";
+import { sendNotification } from "../websocket/handlers.js";
 
 export const createNotification = async (notificationData) => {
   try {
     const notification = await Notification.create(notificationData);
-    
+
     // Send real-time notification via WebSocket
     sendNotification(notification.recipient.toString(), {
-      type: 'NEW_NOTIFICATION',
-      data: notification
+      type: "NEW_NOTIFICATION",
+      data: notification,
     });
 
     return notification;
   } catch (error) {
-    console.error('Error creating notification:', error);
+    console.error("Error creating notification:", error);
     throw error;
   }
 };
@@ -27,15 +28,17 @@ export const getNotifications = async (request, reply) => {
 
     const notifications = await Notification.find({
       recipient: request.user._id,
-      recipientModel: request.user.role === 'student' ? 'Student' : 'Faculty'
+      recipientModel:
+        request.user.role === UserRoles.STUDENT ? "Student" : "Faculty",
     })
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     const total = await Notification.countDocuments({
       recipient: request.user._id,
-      recipientModel: request.user.role === 'student' ? 'Student' : 'Faculty'
+      recipientModel:
+        request.user.role === UserRoles.STUDENT ? "Student" : "Faculty",
     });
 
     return reply.code(200).send({
@@ -44,8 +47,8 @@ export const getNotifications = async (request, reply) => {
       pagination: {
         current: page,
         total: Math.ceil(total / limit),
-        hasMore: skip + notifications.length < total
-      }
+        hasMore: skip + notifications.length < total,
+      },
     });
   } catch (error) {
     throw new ErrorHandler(error.message, 500);
@@ -58,7 +61,7 @@ export const markNotificationRead = async (request, reply) => {
     const notification = await Notification.findOneAndUpdate(
       {
         _id: id,
-        recipient: request.user._id
+        recipient: request.user._id,
       },
       { read: true },
       { new: true }
@@ -70,7 +73,7 @@ export const markNotificationRead = async (request, reply) => {
 
     return reply.code(200).send({
       success: true,
-      notification
+      notification,
     });
   } catch (error) {
     throw new ErrorHandler(error.message, 500);
@@ -82,15 +85,15 @@ export const markAllNotificationsRead = async (request, reply) => {
     await Notification.updateMany(
       {
         recipient: request.user._id,
-        recipientModel: request.user.role === 'student' ? 'Student' : 'Faculty',
-        read: false
+        recipientModel: request.user.role === "student" ? "Student" : "Faculty",
+        read: false,
       },
       { read: true }
     );
 
     return reply.code(200).send({
       success: true,
-      message: "All notifications marked as read"
+      message: "All notifications marked as read",
     });
   } catch (error) {
     throw new ErrorHandler(error.message, 500);
@@ -102,7 +105,7 @@ export const deleteNotification = async (request, reply) => {
     const { id } = request.params;
     const notification = await Notification.findOneAndDelete({
       _id: id,
-      recipient: request.user._id
+      recipient: request.user._id,
     });
 
     if (!notification) {
@@ -111,7 +114,7 @@ export const deleteNotification = async (request, reply) => {
 
     return reply.code(200).send({
       success: true,
-      message: "Notification deleted successfully"
+      message: "Notification deleted successfully",
     });
   } catch (error) {
     throw new ErrorHandler(error.message, 500);

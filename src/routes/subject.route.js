@@ -6,7 +6,7 @@ import {
 import {
   isAdmin,
   isAuthenticatedUser,
-} from "./../middlewares/isAuthenticatedUser";
+} from "./../middlewares/isAuthenticatedUser.js";
 
 const subjectSchema = {
   type: "object",

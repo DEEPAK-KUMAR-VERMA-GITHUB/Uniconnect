@@ -135,6 +135,12 @@ const facultySchema = new mongoose.Schema(
       default: "faculty",
       enum: ["faculty"],
     },
+    subjects: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Subject",
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -147,7 +153,8 @@ studentSchema.methods.getResetPasswordToken = function () {
     .update(resetToken)
     .digest("hex");
 
-  this.resetPasswordExpire = Date.now() + process.env.RESET_PASSWORD_EXPIRES * 60 * 1000;
+  this.resetPasswordExpire =
+    Date.now() + process.env.RESET_PASSWORD_EXPIRES * 60 * 1000;
 
   return resetToken;
 };

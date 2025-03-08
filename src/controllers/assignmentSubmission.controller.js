@@ -1,5 +1,6 @@
-import { AssignmentSubmission } from "../models/assignmentSubmission.model";
-import { Resource } from "../models/resource.model";
+import { AssignmentSubmission } from "../models/assignmentSubmission.model.js";
+import { Resource } from "../models/resource.model.js";
+import { createNotification } from "./notification.controller.js";
 
 export const submitAssignment = async (req, res) => {
   try {
@@ -35,6 +36,17 @@ export const submitAssignment = async (req, res) => {
       // if student has already submitted, update the submission
       previousSubmission.fileUrl = fileUrl;
       await previousSubmission.save();
+
+      // notify faculty
+      await createNotification({
+        recipient: assignment.uploadedBy,
+        recipientModel: "Faculty",
+        title: "Assignment Updated",
+        message: `${req.user.name} has updated the assignment: ${assignment.title}`,
+        type: "ASSIGNMENT",
+        relatedId: assignment._id,
+      });
+
       return res.status(200).json({
         success: true,
         message: "Assignment updated successfully",
@@ -53,6 +65,16 @@ export const submitAssignment = async (req, res) => {
 
     assignmentFile.submissions.push(newAssignmentSubmission._id);
     await assignmentFile.save();
+
+    // notify faculty
+    await createNotification({
+      recipient: assignment.uploadedBy,
+      recipientModel: "Faculty",
+      title: "New Assignment Submission",
+      message: `${req.user.name} has submitted the assignment: ${assignment.title}`,
+      type: "ASSIGNMENT",
+      relatedId: assignment._id,
+    });
 
     return res.status(201).json({
       success: true,
@@ -94,6 +116,16 @@ export const deleteAssignmentSubmission = async (req, res) => {
     );
     await assignmentSubmission.save();
     await assignmentSubmission.assignment.save();
+
+    // notify faculty
+    await createNotification({
+      recipient: assignment.uploadedBy,
+      recipientModel: "Faculty",
+      title: "Assignment Submission Deleted",
+      message: `${req.user.name} has deleted the assignment submission: ${assignment.title}`,
+      type: "ASSIGNMENT",
+      relatedId: assignment._id,
+    });
 
     return res
       .status(200)
