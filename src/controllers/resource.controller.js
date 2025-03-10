@@ -1,11 +1,22 @@
 import { Resource, resourceTypes } from "../models/resource.model.js";
 import { Student } from "../models/user.model.js";
-import { createNotification } from "./notification.controller";
+import { PCloudService } from "../services/PCloudService.service.js";
+import { createNotification } from "./notification.controller.js";
+
+const pcloud = new PCloudService();
 
 export const createResource = async (req, res) => {
   try {
-    const { title, fileUrl, subject, semester, course, type } = req.body;
-    if (!title || !fileUrl || !subject || !semester || !course || !type) {
+    const { title, subject, semester, course, type } = req.body;
+    const file = await req.file();
+
+    if (!file) {
+      return res
+        .code(400)
+        .send({ success: false, message: "No file uploaded" });
+    }
+
+    if (!title || !subject || !semester || !course || !type) {
       return res
         .status(400)
         .json({ success: false, message: "All fields are required" });
@@ -21,7 +32,9 @@ export const createResource = async (req, res) => {
         .json({ success: false, message: "Invalid resource type" });
     }
 
+    // UPLOAD RESOURCE FILE TO PCLOUD
     let newResource = null;
+    const fileUrl = await pcloud.uploadResource(file, type);
 
     if (type === resourceTypes.PYQ) {
       if (!req.body.year) {
@@ -163,8 +176,16 @@ export const updateResource = async (req, res) => {
         .json({ success: false, message: "Resource not found" });
     }
 
-    const { title, fileUrl, subject, semester, course, type } = req.body;
-    if (!title || !fileUrl || !subject || !semester || !course || !type) {
+    const { title, subject, semester, course, type } = req.body;
+    const file = await req.file();
+
+    if (!file) {
+      return res
+        .status(400)
+        .json({ success: false, message: "No file uploaded" });
+    }
+
+    if (!title || !subject || !semester || !course || !type) {
       return res
         .status(400)
         .json({ success: false, message: "All fields are required" });
@@ -179,6 +200,10 @@ export const updateResource = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Invalid resource type" });
     }
+
+    // delete old file from pcloud
+    await pcloud.deleteResource(resource.fileUrl.split("/").pop());
+    const fileUrl = await pcloud.uploadResource(file, type);
 
     if (type === resourceTypes.PYQ) {
       if (!req.body.year) {
@@ -293,6 +318,9 @@ export const deleteResource = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Resource not found" });
     }
+
+    // delete resource from pcloud
+    await pcloud.deleteResource(resource.fileUrl.split("/").pop());
 
     await resource.remove();
 

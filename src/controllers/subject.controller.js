@@ -1,7 +1,7 @@
 import { Resource } from "../models/resource.model.js";
 import { Subject } from "../models/subject.model.js";
 import { Faculty } from "../models/user.model.js";
-import { AssignmentSubmission } from "./../models/assignmentSubmission.model";
+import { AssignmentSubmission } from "./../models/assignmentSubmission.model.js";
 import { createNotification } from "./notification.controller.js";
 
 export const createSubject = async (req, res) => {

@@ -1,5 +1,6 @@
 import {
   createSubject,
+  deleteSubject,
   getSubjects,
   updateSubject,
 } from "../controllers/subject.controller.js";

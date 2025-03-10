@@ -7,22 +7,7 @@ import {
 } from "./../controllers/notification.controller.js";
 
 export const notificationRoutes = async (fastify) => {
-  fastify.get(
-    "/",
-    {
-      preHandler: [fastify.authenticate],
-      schema: {
-        querystring: {
-          type: "object",
-          properties: {
-            page: { type: "number", minimum: 1 },
-            limit: { type: "number", minimum: 1, maximum: 50 },
-          },
-        },
-      },
-    },
-    getNotifications
-  );
+  fastify.get("/", { preHandler: [isAuthenticatedUser] }, getNotifications);
 
   fastify.put(
     "/:id/read",

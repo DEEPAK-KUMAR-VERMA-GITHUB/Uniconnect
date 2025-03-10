@@ -1,7 +1,7 @@
 import { Notification } from "../models/notification.model.js";
 import { UserRoles } from "../models/user.model.js";
-import { ErrorHandler } from "../utils/ErrorHandler.js";
 import { sendNotification } from "../websocket/handlers.js";
+import ErrorHandler from "./../utils/ErrorHandler.js";
 
 export const createNotification = async (notificationData) => {
   try {

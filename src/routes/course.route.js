@@ -1,17 +1,15 @@
 // course routes for course collection
 import {
-  isAdmin,
-  isAuthenticatedUser,
-} from "./../middlewares/isAuthenticatedUser.js";
-import {
-  addSemesterToCourse,
   createCourse,
   deleteCourseById,
   getAllCourses,
   getCourseById,
-  removeSemesterFromCourse,
-  updateCourseById,
+  updateCourseById
 } from "../controllers/course.controller.js";
+import {
+  isAdmin,
+  isAuthenticatedUser,
+} from "./../middlewares/isAuthenticatedUser.js";
 // fastify schema for course registration
 const courseSchema = {
   body: {
@@ -46,17 +44,5 @@ export const courseRoutes = async function (fastify) {
     "/delete-course/:id",
     { preHandler: [isAuthenticatedUser, isAdmin] },
     deleteCourseById
-  );
-  // route to add semester to course
-  fastify.put(
-    "/add-semester/:id",
-    { preHandler: [isAuthenticatedUser, isAdmin] },
-    addSemesterToCourse
-  );
-  // route to remove semester from course
-  fastify.delete(
-    "/remove-semester/:id",
-    { preHandler: [isAuthenticatedUser, isAdmin] },
-    removeSemesterFromCourse
   );
 };
